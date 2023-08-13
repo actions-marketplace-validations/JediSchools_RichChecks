@@ -29,18 +29,18 @@ runs:
     uses: actions/github-script@v6
     id: check
     with:
-      return-encoding: string
+      result-encoding: string
       script: |
         let body = {
           owner: process.env.GITHUB_REPOSITORY.split('/')[0],
           repo: process.env.GITHUB_REPOSITORY.split('/')[1],
-          name: ${{ inputs.name || github.event.repository.name }},
+          name: "${{ inputs.name || github.event.repository.name }}",
           head_sha: process.env.GITHUB_SHA,
-          status: ${{ inputs.status }},
+          status: "${{ inputs.status }}",
           output: {
-            title: ${{ inputs.title }},
-            summary: ${{ inputs.summary }},
-            text: ${{ inputs.details }}
+            title: "${{ inputs.title }}",
+            summary: "${{ inputs.summary }}",
+            text: "${{ inputs.details }}"
           }
         };
 
