@@ -70,7 +70,6 @@ runs:
   - name: step to create
     if: ${{ inputs.check_run_id == null }}
     uses: actions/github-script@v6
-    if: 
     with:
       result-encoding: string
       github-token: ${{ inputs.github_token }}
