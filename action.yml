@@ -1,20 +1,30 @@
-name: 'Create a Rich Check'
+name: 'Update/Create a Rich Check'
 description: "Rich checks from GitHub Mastery Book"
 inputs:
   name:
     description: 'The name of the check'
     required: true
   status:
-    description: 'the status of the check `queued`, `in_progress` or `completed`'
+    description: 'The status of the check `queued`, `in_progress` or `completed`'
     required: true
   title:
-    description: 'the title to put on the check panel'
+    description: 'The title to put on the check panel'
     required: true
   summary:
     description: 'The summary of the check runs current result'
     required: true
   details:
     description: 'The details for the check'
+    required: false
+  conclusion:
+    description: 'The conclusion of the check as a value of `action_required`, `cancelled`, `failure`, `neutral`, `success`, `skipped`, `stale`, and `timed_out`'
+    required: false
+  check_run_id:
+    description: 'If set, this check run will be updated with the conclusion and details provided'
+    required: false
+  github_token:
+    description: 'Github token used by the api requests for the repository (automatically created by Github)'
+    default: ${{ github.token }}
     required: false
 
 outputs:
@@ -25,17 +35,24 @@ outputs:
 runs:
   using: "composite"
   steps:
-  - name: step to create check completed
+  - name: Set to update to completed
+    if: ${{ inputs.check_run_id != null }}
     uses: actions/github-script@v6
-    id: check
     with:
       result-encoding: string
+      github-token: ${{ inputs.github_token }}
       script: |
+        const commitSha = "${{ github.event.pull_request.head.sha || github.sha }}";
+        const owner = process.env.GITHUB_REPOSITORY.split('/')[0];
+        const repo = process.env.GITHUB_REPOSITORY.split('/')[1];
+        const name = "${{ inputs.name || github.event.repository.name }}";
+        
         let body = {
-          owner: process.env.GITHUB_REPOSITORY.split('/')[0],
-          repo: process.env.GITHUB_REPOSITORY.split('/')[1],
-          name: "${{ inputs.name || github.event.repository.name }}",
-          head_sha: process.env.GITHUB_SHA,
+          owner,
+          repo,
+          name,
+          head_sha: commitSha,
+          check_run_id: "${{ inputs.check_run_id }}",
           status: "${{ inputs.status }}",
           output: {
             title: "${{ inputs.title }}",
@@ -43,6 +60,42 @@ runs:
             text: "${{ inputs.details }}"
           }
         };
+        if("${{ inputs.conclusion }}" !== ""){
+          body.conclusion = "${{ inputs.conclusion }}";
+        }
 
+        // update the check
+        const check = await github.rest.checks.update(body);
+        return check.data.id
+  - name: step to create
+    if: ${{ inputs.check_run_id == null }}
+    uses: actions/github-script@v6
+    if: 
+    with:
+      result-encoding: string
+      github-token: ${{ inputs.github_token }}
+      script: |
+        const commitSha = "${{ github.event.pull_request.head.sha || github.sha }}";
+        const owner = process.env.GITHUB_REPOSITORY.split('/')[0];
+        const repo = process.env.GITHUB_REPOSITORY.split('/')[1];
+        const name = "${{ inputs.name || github.event.repository.name }}";
+        
+        let body = {
+          owner,
+          repo,
+          name,
+          head_sha: commitSha,
+          status: "${{ inputs.status }}",
+          output: {
+            title: "${{ inputs.title }}",
+            summary: "${{ inputs.summary }}",
+            text: "${{ inputs.details }}"
+          }
+        };
+        if("${{ inputs.conclusion }}" !== ""){
+          body.conclusion = "${{ inputs.conclusion }}";
+        }
+
+        // Create the check
         const check = await github.rest.checks.create(body);
         return check.data.id
