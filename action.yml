@@ -29,14 +29,15 @@ inputs:
 
 outputs:
   check_run_id:
-    description: 'contains the check run id of the check created '
-    value: ${{ steps.check.outputs.result }}
+    description: 'contains the check run id of the check created or updated'
+    value: ${{ steps.create_check.outputs.result || steps.update_check.outputs.result }}
 
 runs:
   using: "composite"
   steps:
   - name: Set to update to completed
     if: ${{ inputs.check_run_id != null }}
+    id: update_check
     uses: actions/github-script@v6
     with:
       result-encoding: string
@@ -69,6 +70,7 @@ runs:
         return check.data.id
   - name: step to create
     if: ${{ inputs.check_run_id == null }}
+    id: create_check
     uses: actions/github-script@v6
     with:
       result-encoding: string
