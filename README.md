@@ -20,7 +20,7 @@ Ensure you have a workflow set up on your repository. For more details, refer to
 ```yaml
 steps:
   - name: Update/Create a Rich Check
-    uses: JediSchools/RichChecks@main
+    uses: JediSchools/RichChecks@1.0
     with:
       name: 'Name of the check'
       status: 'queued'
@@ -56,7 +56,7 @@ If you'd like to contribute to this project, please open an issue or send a pull
 
 ### License
 
-This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
+This project is licensed under the MIT License. See [LICENSE](./LICENSE.txt) for details.
 
 ### Contact
 
