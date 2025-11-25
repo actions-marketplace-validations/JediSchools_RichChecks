@@ -1,14 +1,15 @@
-name: 'Create a Rich Check'
+name: 'Update/Create a Rich Check'
 description: "Rich checks from GitHub Mastery Book"
+author: "JediSchools"
 inputs:
   name:
     description: 'The name of the check'
     required: true
   status:
-    description: 'the status of the check `queued`, `in_progress` or `completed`'
+    description: 'The status of the check `queued`, `in_progress` or `completed`'
     required: true
   title:
-    description: 'the title to put on the check panel'
+    description: 'The title to put on the check panel'
     required: true
   summary:
     description: 'The summary of the check runs current result'
@@ -16,33 +17,37 @@ inputs:
   details:
     description: 'The details for the check'
     required: false
+  conclusion:
+    description: 'The conclusion of the check as a value of `action_required`, `cancelled`, `failure`, `neutral`, `success`, `skipped`, `stale`, and `timed_out`'
+    required: false
+  check-run-id:
+    description: 'If set, this check run will be updated with the conclusion and details provided'
+    required: false
+  github-token:
+    description: 'Github token used by the api requests for the repository (automatically created by Github)'
+    default: ${{ github.token }}
+    required: false
+  annotations:
+    description: 'the annotations of your check(JSON Object)'
+    required: false
+  images:
+    description: 'add images to your check(JSON Object)'
+    required: false
+  fail-on-error:
+    description: 'step will fail if specified `conclusion` is not `success` or `neutral`'
+    required: false
+  fail-on-neutral:
+    description: 'step will fail if specified `conclusion` is `neutral`'
+    required: false
+
+branding:
+  icon: 'check-circle'
+  color: 'green' 
 
 outputs:
-  check_run_id:
-    description: 'contains the check run id of the check created '
-    value: ${{ steps.check.outputs.result }}
+  check-run-id:
+    description: 'contains the check run id of the check created or updated'
 
 runs:
-  using: "composite"
-  steps:
-  - name: step to create check completed
-    uses: actions/github-script@v6
-    id: check
-    with:
-      result-encoding: string
-      script: |
-        let body = {
-          owner: process.env.GITHUB_REPOSITORY.split('/')[0],
-          repo: process.env.GITHUB_REPOSITORY.split('/')[1],
-          name: "${{ inputs.name || github.event.repository.name }}",
-          head_sha: process.env.GITHUB_SHA,
-          status: "${{ inputs.status }}",
-          output: {
-            title: "${{ inputs.title }}",
-            summary: "${{ inputs.summary }}",
-            text: "${{ inputs.details }}"
-          }
-        };
-
-        const check = await github.rest.checks.create(body);
-        return check.data.id
+  using: "node16"
+  main: "dist/index.js"
